@@ -33,7 +33,7 @@ func init() {
 func CLIText(i types.IDefinerString, input string) {
 	traditional := lib.Traditional(input)
 
-	wikiURL := lib.GetWikiURL(traditional)
+	wikiURL := lib.WikiURL(traditional)
 	fmt.Fprintf(os.Stderr, "Obtaining definitions for %s %s at %s\n", input, lib.Pinyin(input), wikiURL)
 
 	definitions := i.Define(traditional)
@@ -47,7 +47,7 @@ func CLIText(i types.IDefinerString, input string) {
 func CLIHTML(i types.IDefinerHTML, input string) {
 	traditional := lib.Traditional(input)
 
-	wikiURL := lib.GetWikiURL(traditional)
+	wikiURL := lib.WikiURL(traditional)
 	fmt.Fprintf(os.Stderr, "Obtaining definitions for %s %s at %s\n", input, lib.Pinyin(input), wikiURL)
 
 	definitions := i.DefineHTML(traditional)

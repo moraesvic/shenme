@@ -48,13 +48,13 @@ func init() {
 	definitionsHTMLTemplate = _definitionsHTMLTemplate
 }
 
-type Definitions []string
+type TDefinitions []string
 
-func (definitions Definitions) Length() int {
+func (definitions TDefinitions) Length() int {
 	return len(definitions)
 }
 
-func (definitions Definitions) String() string {
+func (definitions TDefinitions) String() string {
 	var sb strings.Builder
 
 	for index, line := range definitions {
@@ -64,13 +64,13 @@ func (definitions Definitions) String() string {
 	return sb.String()
 }
 
-func (definitions Definitions) HTML() string {
+func (definitions TDefinitions) HTML() string {
 	buf := new(bytes.Buffer)
 	definitionsHTMLTemplate.Execute(buf, definitions)
 	return buf.String()
 }
 
-func RawWikiTextToDefinitions(text string) Definitions {
+func RawWikiTextToDefinitions(text string) TDefinitions {
 	var definitions []string = []string{}
 	var reading bool = false
 
@@ -104,7 +104,7 @@ func Traditional(simplified string) string {
 	return traditional
 }
 
-func GetWikiURL(traditional string) string {
+func WikiURL(traditional string) string {
 	encoded := url.QueryEscape(traditional)
 	log.Printf("URL-encoded: %s", encoded)
 
@@ -114,7 +114,7 @@ func GetWikiURL(traditional string) string {
 	return wikiURL
 }
 
-func GetDefinitions(wikiURL string) Definitions {
+func Definitions(wikiURL string) TDefinitions {
 	res, err := http.Get(wikiURL)
 	if err != nil {
 		log.Printf("Cannot download wiki page %s", wikiURL)
@@ -157,9 +157,9 @@ func Pinyin(chars string) string {
 type Definer struct{}
 
 func (Definer) _Define(traditional string) types.IDefinitionBoth {
-	wikiURL := GetWikiURL(traditional)
+	wikiURL := WikiURL(traditional)
 	log.Printf("Obtaining definitions for %s at %s\n", traditional, wikiURL)
-	return GetDefinitions(wikiURL)
+	return Definitions(wikiURL)
 }
 
 func (d Definer) Define(traditional string) types.IDefinitionString {
