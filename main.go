@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mozillazg/go-pinyin"
+	gopinyin "github.com/mozillazg/go-pinyin"
 	"github.com/siongui/gojianfan"
 )
 
@@ -21,7 +21,7 @@ var (
 	otherHeader    *regexp.Regexp
 	definition     *regexp.Regexp
 	unwantedMarkup *regexp.Regexp
-	pinyinArgs     pinyin.Args
+	pinyinArgs     gopinyin.Args
 
 	definitionsHTMLTemplate *template.Template
 )
@@ -32,8 +32,8 @@ func init() {
 	definition = regexp.MustCompile("^# ")
 	unwantedMarkup = regexp.MustCompile(`(^# |\[\[|\]\])`)
 
-	pinyinArgs = pinyin.NewArgs()
-	pinyinArgs.Style = pinyin.Tone
+	pinyinArgs = gopinyin.NewArgs()
+	pinyinArgs.Style = gopinyin.Tone
 	pinyinArgs.Heteronym = true
 
 	_definitionsHTMLTemplate, err := template.New("definitionsHTML").
@@ -92,10 +92,13 @@ func RawWikiTextToDefinitions(text string) Definitions {
 	return definitions
 }
 
-func GetWikiURL(input string) string {
-	traditional := gojianfan.S2T(input)
-	log.Printf("%s maps to Traditional Chinese %s", input, traditional)
+func Traditional(simplified string) string {
+	traditional := gojianfan.S2T(simplified)
+	log.Printf("%s maps to Traditional Chinese %s", simplified, traditional)
+	return traditional
+}
 
+func GetWikiURL(traditional string) string {
 	encoded := url.QueryEscape(traditional)
 	log.Printf("URL-encoded: %s", encoded)
 
@@ -126,20 +129,20 @@ func GetDefinitions(wikiURL string) Definitions {
 	return RawWikiTextToDefinitions(string(body))
 }
 
-func toPinyin(char string) string {
-	result := pinyin.Pinyin(char, pinyinArgs)[0]
+func _Pinyin(char string) string {
+	result := gopinyin.Pinyin(char, pinyinArgs)[0]
 	return fmt.Sprintf("(%s)", strings.Join(result, ", "))
 }
 
-func ToPinyin(chars string) string {
+func Pinyin(chars string) string {
 	runes := []rune(chars)
 	if len(runes) == 1 {
-		return toPinyin(chars)
+		return _Pinyin(chars)
 	}
 
 	results := []string{}
 	for _, r := range runes {
-		results = append(results, toPinyin(string(r)))
+		results = append(results, _Pinyin(string(r)))
 	}
 
 	return fmt.Sprintf("[%s]", strings.Join(results, ", "))
@@ -153,8 +156,10 @@ func main() {
 
 	input := os.Args[1]
 
-	wikiURL := GetWikiURL(input)
-	fmt.Printf("Obtaining definitions for %s %s at %s\n", input, ToPinyin(input), wikiURL)
+	traditional := Traditional(input)
+
+	wikiURL := GetWikiURL(traditional)
+	fmt.Printf("Obtaining definitions for %s %s at %s\n", input, Pinyin(input), wikiURL)
 
 	definitions := GetDefinitions(wikiURL)
 	fmt.Print(definitions.String())
