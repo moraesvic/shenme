@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"github.com/mozillazg/go-pinyin"
 	"github.com/siongui/gojianfan"
@@ -20,6 +22,8 @@ var (
 	definition     *regexp.Regexp
 	unwantedMarkup *regexp.Regexp
 	pinyinArgs     pinyin.Args
+
+	definitionsHTMLTemplate *template.Template
 )
 
 func init() {
@@ -31,6 +35,15 @@ func init() {
 	pinyinArgs = pinyin.NewArgs()
 	pinyinArgs.Style = pinyin.Tone
 	pinyinArgs.Heteronym = true
+
+	_definitionsHTMLTemplate, err := template.New("definitionsHTML").
+		Parse(`<ol>{{range .}}{{printf "<li>%s</li>" .}}{{end}}</ol>`)
+
+	if err != nil {
+		log.Fatalf("Error compiling template.")
+	}
+
+	definitionsHTMLTemplate = _definitionsHTMLTemplate
 }
 
 type Definitions []string
@@ -43,6 +56,12 @@ func (definitions Definitions) String() string {
 	}
 
 	return sb.String()
+}
+
+func (definitions Definitions) HTML() string {
+	buf := new(bytes.Buffer)
+	definitionsHTMLTemplate.Execute(buf, definitions)
+	return buf.String()
 }
 
 func RawWikiTextToDefinitions(text string) Definitions {
