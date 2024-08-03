@@ -1,4 +1,4 @@
-module github.com/moraesvic/chinese-wiktionary-definitions
+module github.com/moraesvic/shenme
 
 go 1.22.0
 

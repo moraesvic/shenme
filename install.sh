@@ -8,7 +8,7 @@ if [ ! -d ~/bin/.executables ] ; then
     mkdir -p ~/bin/.executables
 fi
 
-cp chinese-wiktionary-definitions ~/bin/.executables/shenme
+cp ./shenme ~/bin/.executables/shenme
 
 cat <<EOF > ~/bin/shenme
 #!/usr/bin/env bash
