@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 
@@ -28,10 +29,10 @@ func init() {
 
 type Definitions []string
 
-func (d Definitions) String() string {
+func (definitions Definitions) String() string {
 	var sb strings.Builder
 
-	for index, line := range d {
+	for index, line := range definitions {
 		sb.WriteString(fmt.Sprintf("%d. %s\n", index+1, line))
 	}
 
@@ -51,14 +52,14 @@ func RawWikiTextToDefinitions(text string) Definitions {
 			continue
 		}
 
-		if otherHeader.MatchString(line) {
+		if reading && otherHeader.MatchString(line) {
 			reading = false
 			break
 		}
 
 		if reading && definition.MatchString(line) {
-			cleanDefinition := unwantedMarkup.ReplaceAllString(line, "")
-			definitions = append(definitions, cleanDefinition)
+			definition := unwantedMarkup.ReplaceAllString(line, "")
+			definitions = append(definitions, definition)
 		}
 	}
 
@@ -82,7 +83,7 @@ func GetWikiURL(input string) string {
 func GetDefinitions(wikiURL string) Definitions {
 	res, err := http.Get(wikiURL)
 	if err != nil {
-		log.Printf("Can't download wiki page %s", wikiURL)
+		log.Printf("Cannot download wiki page %s", wikiURL)
 		return []string{}
 	}
 
@@ -93,7 +94,7 @@ func GetDefinitions(wikiURL string) Definitions {
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Printf("Can't read the body for wiki page %s", wikiURL)
+		log.Printf("Cannot read the body for wiki page %s", wikiURL)
 		return []string{}
 	}
 
@@ -101,8 +102,15 @@ func GetDefinitions(wikiURL string) Definitions {
 }
 
 func main() {
-	wikiURL := GetWikiURL("今天")
-	definitions := GetDefinitions(wikiURL)
+	if len(os.Args) != 2 {
+		log.Fatalf("Usage: %s <chinese-word>\n", os.Args[0])
+	}
 
+	input := os.Args[1]
+
+	wikiURL := GetWikiURL(input)
+	fmt.Printf("Obtaining definitions for %s at %s\n", input, wikiURL)
+
+	definitions := GetDefinitions(wikiURL)
 	fmt.Print(definitions.String())
 }
