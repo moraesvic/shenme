@@ -12,7 +12,7 @@ cp chinese-wiktionary-definitions ~/bin/.executables/shenme
 
 cat <<EOF > ~/bin/shenme
 #!/usr/bin/env bash
-~/bin/.executables/shenme "$@" 2>/dev/null
+~/bin/.executables/shenme "\$@" 2>/dev/null
 EOF
 
 chmod +x ~/bin/shenme

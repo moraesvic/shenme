@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mozillazg/go-pinyin"
 	"github.com/siongui/gojianfan"
 )
 
@@ -18,6 +19,7 @@ var (
 	otherHeader    *regexp.Regexp
 	definition     *regexp.Regexp
 	unwantedMarkup *regexp.Regexp
+	pinyinArgs     pinyin.Args
 )
 
 func init() {
@@ -25,6 +27,10 @@ func init() {
 	otherHeader = regexp.MustCompile("^==[^=].*[^=]==$")
 	definition = regexp.MustCompile("^# ")
 	unwantedMarkup = regexp.MustCompile(`(^# |\[\[|\]\])`)
+
+	pinyinArgs = pinyin.NewArgs()
+	pinyinArgs.Style = pinyin.Tone
+	pinyinArgs.Heteronym = true
 }
 
 type Definitions []string
@@ -101,16 +107,40 @@ func GetDefinitions(wikiURL string) Definitions {
 	return RawWikiTextToDefinitions(string(body))
 }
 
+func toPinyin(char string) string {
+	result := pinyin.Pinyin(char, pinyinArgs)[0]
+	return fmt.Sprintf("(%s)", strings.Join(result, ", "))
+}
+
+func ToPinyin(chars string) string {
+	runes := []rune(chars)
+	if len(runes) == 1 {
+		return toPinyin(chars)
+	}
+
+	results := []string{}
+	for _, r := range runes {
+		results = append(results, toPinyin(string(r)))
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(results, ", "))
+}
+
 func main() {
 	if len(os.Args) != 2 {
-		log.Fatalf("Usage: %s <chinese-word>\n", os.Args[0])
+		fmt.Printf("Usage: %s <chinese-word>\n", os.Args[0])
+		panic(0)
 	}
 
 	input := os.Args[1]
 
 	wikiURL := GetWikiURL(input)
-	fmt.Printf("Obtaining definitions for %s at %s\n", input, wikiURL)
+	fmt.Printf("Obtaining definitions for %s %s at %s\n", input, ToPinyin(input), wikiURL)
 
 	definitions := GetDefinitions(wikiURL)
 	fmt.Print(definitions.String())
+
+	if len(definitions) == 0 {
+		fmt.Println("No definitions were found.")
+	}
 }
